@@ -1,39 +1,77 @@
-# Snapbug iOS Sample App
+# Snapbug for iOS
 
-Pure Swift/SwiftUI sample app demonstrating the Snapbug Debug Feedback SDK.
+Swift package for the [Snapbug](https://snapbug.ai) debugging and bug-reporting
+SDK. It wraps the `SnapbugSDK` XCFramework built from the Kotlin Multiplatform
+core, so the same plugins run on iOS as on Android.
 
-## Setup
+## Install
 
-1. Build the KMP XCFramework:
-   ```bash
-   cd ../SnapbugAndroid
-   ./gradlew :snapbug:assembleXCFramework
-   ./gradlew :debug-feedback:assembleXCFramework
-   ```
+In Xcode: **File → Add Package Dependencies…** and enter
 
-2. Copy the XCFramework to the Swift Package:
-   ```bash
-   cp -r SnapbugAndroid/snapbug/build/XCFrameworks/release/SnapbugSDK.xcframework \
-         SnapbugDebugFeedbackSwift/
-   ```
+```
+https://github.com/snapbug-ai/snapbug-ios.git
+```
 
-3. Open `SampleApp.xcodeproj` in Xcode
+Or in a `Package.swift`:
 
-4. Add the local Swift Package dependency:
-   - File → Add Package Dependencies
-   - Click "Add Local..."
-   - Select `SnapbugDebugFeedbackSwift/` directory
+```swift
+.package(url: "https://github.com/snapbug-ai/snapbug-ios.git", from: "0.1.1")
+```
 
-5. Build and run on iOS Simulator or device
+The package pulls a prebuilt XCFramework from the
+[releases](https://github.com/snapbug-ai/releases/releases) repo — there is
+nothing to compile and no Kotlin toolchain to install.
 
-## Features
+Requires iOS 15 or later. The XCFramework ships `arm64` slices for devices and
+for the simulator; Intel Macs are not supported.
 
-Mirrors the Android `sample-android-only` app:
-- HTTP test request (URLSession)
-- Show dialog (FAB should appear above it)
-- Send analytics event (simulated)
-- Send table event (simulated)
-- Write UserDefaults
-- Insert dog in DB (simulated)
-- Crash button
-- Image list from picsum.photos
+## Use
+
+One line in your `App`:
+
+```swift
+import SwiftUI
+import Snapbug
+
+@main
+struct MyApp: App {
+    init() {
+        Snapbug.start()
+    }
+
+    var body: some Scene {
+        WindowGroup { ContentView() }
+    }
+}
+```
+
+`import Snapbug` works because this package re-exports the `SnapbugSDK` module.
+
+Every plugin — network, logs, analytics, files, preferences, crash reporting,
+device info, debug feedback — is on by default. To adjust that, pass a config:
+
+```swift
+Snapbug.start(config: .init(
+    serverHost: "192.168.1.10",   // your desktop inspector
+    collectTimeline: true
+))
+```
+
+To connect the app to the inspector, follow the pairing instructions at
+[snapbug.ai/get](https://snapbug.ai/get).
+
+## Sample app
+
+`SampleApp.xcodeproj` in this repo is a SwiftUI app that exercises every
+inspector tab, mirroring the Android sample:
+
+- HTTP request via `URLSession`
+- Analytics and table events
+- `UserDefaults` writes
+- Image list loaded from the network
+- A dialog, to check the overlay stays on top
+- A deliberate crash, for the crash reporter
+
+## Documentation
+
+Full docs: [snapbug.ai/docs/ios](https://snapbug.ai/docs/ios)
